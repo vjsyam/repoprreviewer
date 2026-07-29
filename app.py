@@ -8,474 +8,157 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# ─────────────────────────────────────────────────────────────────────────────
+# PAGE CONFIG  (wide layout is critical for correct column sizing)
+# ─────────────────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="PR Reviewer — AI Code Review",
+    page_title="PR Reviewer — AI Security Review",
     page_icon="🔍",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="collapsed",
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
-# STYLES
+# CSS  — ONLY visual styling, zero layout overrides
 # ─────────────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
-/* ── Global Reset ── */
-html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
-}
-
-/* ── Hide Streamlit chrome ── */
+/* ── base ── */
+html, body, [class*="css"] { font-family: 'Inter', sans-serif !important; }
+.stApp { background: #0D0F14 !important; }
 #MainMenu, footer, header { visibility: hidden; }
-.block-container { padding: 0 !important; max-width: 100% !important; }
-section[data-testid="stSidebar"] { display: none; }
 
-/* ── Root layout ── */
-.app-root {
-    background: #0A0B0F;
-    min-height: 100vh;
-    color: #E8EAF0;
-}
+/* ── block container padding ── */
+.block-container { padding: 2rem 3rem 4rem !important; max-width: 100% !important; }
 
-/* ── Topbar ── */
-.topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 18px 48px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
-    background: rgba(10,11,15,0.95);
-    backdrop-filter: blur(12px);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-.topbar-logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 700;
-    font-size: 1rem;
-    color: #fff;
-    letter-spacing: -0.3px;
-}
-.topbar-logo span.dot {
-    width: 8px; height: 8px;
-    background: linear-gradient(135deg, #6366F1, #8B5CF6);
-    border-radius: 50%;
-    display: inline-block;
-}
-.topbar-badge {
-    font-size: 0.72rem;
-    font-weight: 500;
-    padding: 4px 10px;
-    border-radius: 20px;
-    background: rgba(99,102,241,0.15);
-    color: #818CF8;
-    border: 1px solid rgba(99,102,241,0.25);
-    letter-spacing: 0.3px;
-}
+/* ── dividers ── */
+hr { border-color: rgba(255,255,255,0.06) !important; margin: 1.5rem 0 !important; }
 
-/* ── Hero Section ── */
-.hero {
-    padding: 72px 48px 48px;
-    max-width: 860px;
-}
-.hero-eyebrow {
-    font-size: 0.78rem;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: #6366F1;
-    margin-bottom: 16px;
-}
-.hero-title {
-    font-size: 3.2rem;
-    font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: -1.5px;
-    color: #FFFFFF;
-    margin-bottom: 16px;
-}
-.hero-title .accent {
-    background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #EC4899 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-.hero-sub {
-    font-size: 1.1rem;
-    font-weight: 400;
-    color: #9CA3AF;
-    line-height: 1.7;
-    max-width: 560px;
-}
+/* ── Streamlit text overrides ── */
+p, li, span, label { color: #CBD5E1 !important; }
+h1, h2, h3 { color: #F1F5F9 !important; }
 
-/* ── Main Content Grid ── */
-.content-grid {
-    display: grid;
-    grid-template-columns: 1fr 340px;
-    gap: 0;
-    min-height: calc(100vh - 200px);
-    border-top: 1px solid rgba(255,255,255,0.05);
-}
-.main-panel {
-    padding: 40px 48px;
-    border-right: 1px solid rgba(255,255,255,0.05);
-}
-.side-panel {
-    padding: 32px 28px;
-    background: rgba(255,255,255,0.02);
-}
-
-/* ── Section Label ── */
-.section-label {
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: #6B7280;
-    margin-bottom: 12px;
-}
-
-/* ── URL Input Card ── */
-.input-card {
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 16px;
-    padding: 24px;
-    margin-bottom: 24px;
-    transition: border-color 0.2s;
-}
-.input-card:hover { border-color: rgba(99,102,241,0.3); }
-
-/* ── Override Streamlit inputs ── */
+/* ── text_input ── */
 div[data-testid="stTextInput"] input {
-    background: rgba(255,255,255,0.04) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    border-radius: 10px !important;
-    color: #E8EAF0 !important;
+    background: #161B26 !important;
+    border: 1px solid #2D3748 !important;
+    border-radius: 8px !important;
+    color: #E2E8F0 !important;
     font-family: 'JetBrains Mono', monospace !important;
-    font-size: 0.88rem !important;
-    padding: 12px 16px !important;
+    font-size: 0.875rem !important;
+    padding: 10px 14px !important;
     transition: border-color 0.2s, box-shadow 0.2s !important;
 }
 div[data-testid="stTextInput"] input:focus {
-    border-color: rgba(99,102,241,0.6) !important;
-    box-shadow: 0 0 0 3px rgba(99,102,241,0.12) !important;
+    border-color: #6366F1 !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15) !important;
     outline: none !important;
 }
 div[data-testid="stTextInput"] label {
-    color: #9CA3AF !important;
-    font-size: 0.82rem !important;
+    color: #94A3B8 !important;
+    font-size: 0.8rem !important;
     font-weight: 500 !important;
-    margin-bottom: 6px !important;
 }
 
-/* ── Run Button ── */
-div[data-testid="stButton"] > button {
-    background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%) !important;
-    color: white !important;
+/* ── password input ── */
+div[data-testid="stTextInput"] input[type="password"] {
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* ── primary button ── */
+button[kind="primary"],
+div[data-testid="stButton"] button[kind="primary"] {
+    background: linear-gradient(135deg, #6366F1, #8B5CF6) !important;
     border: none !important;
-    border-radius: 10px !important;
+    border-radius: 8px !important;
+    color: #fff !important;
     font-weight: 600 !important;
-    font-size: 0.92rem !important;
-    padding: 12px 28px !important;
-    letter-spacing: -0.2px !important;
-    transition: opacity 0.2s, transform 0.1s !important;
-    box-shadow: 0 4px 20px rgba(99,102,241,0.35) !important;
+    font-size: 0.9rem !important;
+    padding: 10px 20px !important;
+    box-shadow: 0 4px 15px rgba(99,102,241,0.4) !important;
+    transition: opacity 0.15s, transform 0.1s !important;
 }
-div[data-testid="stButton"] > button:hover {
-    opacity: 0.9 !important;
-    transform: translateY(-1px) !important;
-    box-shadow: 0 6px 24px rgba(99,102,241,0.45) !important;
-}
-div[data-testid="stButton"] > button:active { transform: translateY(0px) !important; }
+button[kind="primary"]:hover { opacity: 0.88 !important; transform: translateY(-1px) !important; }
 
-/* ── Sample PR Chips ── */
-.chip-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-.chip {
-    font-size: 0.74rem;
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 500;
-    padding: 5px 12px;
-    border-radius: 20px;
-    background: rgba(99,102,241,0.08);
-    border: 1px solid rgba(99,102,241,0.2);
-    color: #818CF8;
-    cursor: pointer;
-    transition: background 0.15s;
-    white-space: nowrap;
+/* ── secondary / normal button ── */
+div[data-testid="stButton"] button {
+    background: #1E2535 !important;
+    border: 1px solid #2D3748 !important;
+    border-radius: 8px !important;
+    color: #94A3B8 !important;
+    font-weight: 500 !important;
+    font-size: 0.84rem !important;
+    padding: 8px 16px !important;
+    transition: background 0.15s, border-color 0.15s !important;
 }
-.chip:hover { background: rgba(99,102,241,0.18); }
-
-/* ── Pipeline Status ── */
-.pipeline-row {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    margin: 20px 0 28px;
-}
-.pipeline-node {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-}
-.pipeline-icon {
-    width: 40px; height: 40px;
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem;
-    font-weight: 700;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    transition: all 0.3s;
-}
-.pipeline-icon.active {
-    background: rgba(99,102,241,0.2);
-    border-color: rgba(99,102,241,0.5);
-    box-shadow: 0 0 16px rgba(99,102,241,0.25);
-}
-.pipeline-icon.done {
-    background: rgba(16,185,129,0.15);
-    border-color: rgba(16,185,129,0.4);
-}
-.pipeline-label {
-    font-size: 0.68rem;
-    font-weight: 500;
-    color: #6B7280;
-    font-family: 'JetBrains Mono', monospace;
-    text-align: center;
-}
-.pipeline-arrow {
-    flex: 1;
-    height: 1px;
-    background: linear-gradient(90deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3));
-    margin: 0 8px;
-    margin-bottom: 24px;
-    min-width: 20px;
+div[data-testid="stButton"] button:hover {
+    background: #252D3D !important;
+    border-color: #4F5C78 !important;
+    color: #E2E8F0 !important;
 }
 
-/* ── Findings Cards ── */
-.findings-grid { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
-.finding-card {
-    background: rgba(255,255,255,0.025);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 12px;
-    padding: 16px 18px;
-    transition: border-color 0.2s, transform 0.15s;
+/* ── expander ── */
+div[data-testid="stExpander"] {
+    background: #161B26 !important;
+    border: 1px solid #2D3748 !important;
+    border-radius: 10px !important;
 }
-.finding-card:hover { border-color: rgba(255,255,255,0.14); transform: translateX(2px); }
-.finding-card.high { border-left: 3px solid #EF4444; }
-.finding-card.medium { border-left: 3px solid #F59E0B; }
-.finding-card.low { border-left: 3px solid #3B82F6; }
-.finding-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.finding-category {
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    color: #6B7280;
-}
-.severity-badge {
-    font-size: 0.66rem;
-    font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 4px;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-}
-.severity-badge.high { background: rgba(239,68,68,0.15); color: #FCA5A5; border: 1px solid rgba(239,68,68,0.3); }
-.severity-badge.medium { background: rgba(245,158,11,0.12); color: #FCD34D; border: 1px solid rgba(245,158,11,0.3); }
-.severity-badge.low { background: rgba(59,130,246,0.12); color: #93C5FD; border: 1px solid rgba(59,130,246,0.3); }
-.finding-desc { font-size: 0.88rem; color: #D1D5DB; line-height: 1.5; margin-bottom: 8px; }
-.finding-file {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.75rem;
-    color: #6366F1;
-    background: rgba(99,102,241,0.08);
-    padding: 2px 8px;
-    border-radius: 4px;
-    display: inline-block;
-    margin-bottom: 6px;
-}
-.finding-suggestion {
-    font-size: 0.8rem;
-    color: #9CA3AF;
-    display: flex;
-    align-items: flex-start;
-    gap: 6px;
-    line-height: 1.4;
-}
-.finding-suggestion::before { content: "→"; color: #6366F1; flex-shrink: 0; margin-top: 1px; }
-
-/* ── Summary Stats Bar ── */
-.stats-row { display: flex; gap: 12px; margin-bottom: 24px; }
-.stat-box {
-    flex: 1;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
-    border-radius: 10px;
-    padding: 14px;
-    text-align: center;
-}
-.stat-number { font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 2px; }
-.stat-label { font-size: 0.7rem; font-weight: 500; color: #6B7280; text-transform: uppercase; letter-spacing: 0.5px; }
-.stat-number.high { color: #EF4444; }
-.stat-number.medium { color: #F59E0B; }
-.stat-number.low { color: #3B82F6; }
-.stat-number.total { color: #E8EAF0; }
-
-/* ── Status Banners ── */
-.status-banner {
-    border-radius: 12px;
-    padding: 16px 20px;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-weight: 600;
-    font-size: 0.92rem;
-}
-.status-banner.approved { background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.25); color: #6EE7B7; }
-.status-banner.action { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); color: #FCA5A5; }
-.status-banner.comment { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); color: #FCD34D; }
-
-/* ── Audit Checklist ── */
-.checklist { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
-.checklist-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 14px;
-    background: rgba(255,255,255,0.02);
-    border: 1px solid rgba(255,255,255,0.06);
-    border-radius: 8px;
-    font-size: 0.85rem;
-}
-.checklist-label { color: #D1D5DB; font-weight: 500; }
-.checklist-ok { color: #6EE7B7; font-weight: 600; font-size: 0.78rem; }
-.checklist-fail { color: #FCA5A5; font-weight: 600; font-size: 0.78rem; }
-
-/* ── Instructions Panel (sidebar) ── */
-.instr-title {
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: #4B5563;
-    margin-bottom: 16px;
-}
-.instr-step {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 20px;
-    align-items: flex-start;
-}
-.instr-num {
-    width: 24px; height: 24px;
-    border-radius: 6px;
-    background: rgba(99,102,241,0.15);
-    border: 1px solid rgba(99,102,241,0.25);
-    color: #818CF8;
-    font-size: 0.72rem;
-    font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    margin-top: 1px;
-}
-.instr-content { flex: 1; }
-.instr-heading { font-size: 0.82rem; font-weight: 600; color: #D1D5DB; margin-bottom: 3px; }
-.instr-body { font-size: 0.76rem; color: #6B7280; line-height: 1.5; }
-.instr-code {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.7rem;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 5px;
-    padding: 2px 6px;
-    color: #A78BFA;
-    display: inline-block;
-    margin-top: 3px;
-}
-.instr-divider { border: none; border-top: 1px solid rgba(255,255,255,0.05); margin: 20px 0; }
-
-/* ── Sample PRs in sidebar ── */
-.sample-pr {
-    padding: 10px 12px;
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.07);
-    background: rgba(255,255,255,0.02);
-    margin-bottom: 8px;
-    cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-}
-.sample-pr:hover { background: rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.2); }
-.sample-pr-name { font-size: 0.78rem; font-weight: 600; color: #D1D5DB; }
-.sample-pr-url { font-family: 'JetBrains Mono', monospace; font-size: 0.66rem; color: #6B7280; margin-top: 2px; word-break: break-all; }
-.sample-pr-tags { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
-.pr-tag {
-    font-size: 0.62rem;
-    font-weight: 600;
-    padding: 2px 7px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.3px;
-}
-.pr-tag.sqli { background: rgba(239,68,68,0.12); color: #FCA5A5; }
-.pr-tag.secret { background: rgba(245,158,11,0.12); color: #FCD34D; }
-.pr-tag.clean { background: rgba(16,185,129,0.12); color: #6EE7B7; }
-.pr-tag.err { background: rgba(99,102,241,0.12); color: #A78BFA; }
-
-/* ── Diff Viewer ── */
-div[data-testid="stCode"] {
-    border-radius: 12px !important;
-    border: 1px solid rgba(255,255,255,0.07) !important;
-    background: rgba(0,0,0,0.3) !important;
-}
-div[data-testid="stCode"] code {
-    font-family: 'JetBrains Mono', monospace !important;
-    font-size: 0.78rem !important;
+div[data-testid="stExpander"] summary {
+    color: #94A3B8 !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    padding: 12px 16px !important;
 }
 
-/* ── Tabs ── */
+/* ── tabs ── */
 div[data-testid="stTabs"] [role="tablist"] {
+    border-bottom: 1px solid #2D3748 !important;
     background: transparent !important;
-    border-bottom: 1px solid rgba(255,255,255,0.07) !important;
-    gap: 4px !important;
+    gap: 2px !important;
 }
 div[data-testid="stTabs"] [role="tab"] {
+    font-family: 'Inter', sans-serif !important;
     font-size: 0.82rem !important;
     font-weight: 500 !important;
-    color: #6B7280 !important;
-    padding: 8px 16px !important;
+    color: #64748B !important;
+    padding: 8px 18px !important;
     border-radius: 6px 6px 0 0 !important;
-    border: none !important;
     background: transparent !important;
+    border: none !important;
+    transition: color 0.15s !important;
 }
 div[data-testid="stTabs"] [role="tab"][aria-selected="true"] {
-    color: #E8EAF0 !important;
-    background: rgba(99,102,241,0.1) !important;
+    color: #E2E8F0 !important;
+    background: rgba(99,102,241,0.08) !important;
     border-bottom: 2px solid #6366F1 !important;
 }
 
-/* ── Error box ── */
-div[data-testid="stAlert"] {
-    border-radius: 10px !important;
-    border: 1px solid rgba(239,68,68,0.3) !important;
-    background: rgba(239,68,68,0.07) !important;
+/* ── code blocks ── */
+pre, code {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 0.78rem !important;
+    background: #0A0C12 !important;
+    border: 1px solid #1E2535 !important;
+    border-radius: 8px !important;
+    color: #94A3B8 !important;
 }
 
-/* ── Spinner text ── */
-div[data-testid="stStatusWidget"] { color: #9CA3AF !important; }
+/* ── status widget ── */
+div[data-testid="stStatusWidget"] {
+    background: #161B26 !important;
+    border: 1px solid #2D3748 !important;
+    border-radius: 10px !important;
+}
 
-/* ── Scrollbar ── */
-::-webkit-scrollbar { width: 4px; }
+/* ── st.caption ── */
+div[data-testid="stCaptionContainer"] p { color: #475569 !important; font-size: 0.76rem !important; }
+
+/* ── scrollbar ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: #2D3748; border-radius: 4px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -484,257 +167,291 @@ div[data-testid="stStatusWidget"] { color: #9CA3AF !important; }
 # ─────────────────────────────────────────────────────────────────────────────
 if "result" not in st.session_state:
     st.session_state.result = None
-if "running" not in st.session_state:
-    st.session_state.running = False
-if "pr_url_input" not in st.session_state:
-    st.session_state.pr_url_input = "https://github.com/vjsyam/imageforgerydetector/pull/1"
+if "pr_url" not in st.session_state:
+    st.session_state.pr_url = "https://github.com/vjsyam/imageforgerydetector/pull/1"
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TOPBAR
+# HELPERS — pure-HTML snippets (display only, no layout)
+# ─────────────────────────────────────────────────────────────────────────────
+def badge(text: str, color: str, bg: str, border: str) -> str:
+    return (
+        f'<span style="display:inline-block;font-family:Inter,sans-serif;font-size:0.68rem;'
+        f'font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:3px 9px;'
+        f'border-radius:4px;background:{bg};color:{color};border:1px solid {border};">{text}</span>'
+    )
+
+def severity_badge(sev: str) -> str:
+    lut = {
+        "HIGH":   ("#FCA5A5", "rgba(239,68,68,0.15)",  "rgba(239,68,68,0.35)"),
+        "MEDIUM": ("#FCD34D", "rgba(245,158,11,0.12)", "rgba(245,158,11,0.35)"),
+        "LOW":    ("#93C5FD", "rgba(59,130,246,0.12)",  "rgba(59,130,246,0.35)"),
+    }
+    c, bg, b = lut.get(sev.upper(), ("#94A3B8", "rgba(100,116,139,0.1)", "#2D3748"))
+    return badge(sev, c, bg, b)
+
+CAT_META = {
+    "hardcoded_secret":       ("🔐", "Hardcoded Secret",       "#F59E0B"),
+    "sql_injection":          ("💉", "SQL Injection",          "#EF4444"),
+    "missing_input_validation":("🛡️","Input Validation",      "#3B82F6"),
+    "missing_error_handling": ("⚠️", "Error Handling",         "#8B5CF6"),
+}
+SEVERITY_BORDER = {"HIGH": "#EF4444", "MEDIUM": "#F59E0B", "LOW": "#3B82F6"}
+
+def finding_card(f: dict) -> str:
+    sev   = f.get("severity", "MEDIUM").upper()
+    cat   = f.get("category", "")
+    icon, label, _ = CAT_META.get(cat, ("🔎", cat.replace("_", " ").title(), "#6366F1"))
+    border = SEVERITY_BORDER.get(sev, "#4B5563")
+    desc   = f.get("description", "")
+    ffile  = f.get("file", "")
+    line   = f.get("line", "")
+    sug    = f.get("suggestion", "")
+    return f"""
+<div style="
+    background:#161B26;
+    border:1px solid #2D3748;
+    border-left:3px solid {border};
+    border-radius:10px;
+    padding:16px 18px;
+    margin-bottom:10px;
+">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <span style="font-size:0.75rem;font-weight:600;color:#64748B;text-transform:uppercase;letter-spacing:0.5px;">
+      {icon}&nbsp;&nbsp;{label}
+    </span>
+    {severity_badge(sev)}
+  </div>
+  <div style="font-size:0.88rem;color:#CBD5E1;line-height:1.55;margin-bottom:10px;">{desc}</div>
+  <code style="font-size:0.75rem;background:rgba(99,102,241,0.1);color:#818CF8;
+               border:1px solid rgba(99,102,241,0.2);border-radius:5px;
+               padding:2px 8px;">{ffile} : {line}</code>
+  <div style="margin-top:10px;font-size:0.8rem;color:#64748B;line-height:1.45;">
+    <span style="color:#6366F1;margin-right:6px;">→</span>{sug}
+  </div>
+</div>"""
+
+def stat_card(value, label: str, color: str = "#E2E8F0") -> None:
+    st.markdown(f"""
+<div style="background:#161B26;border:1px solid #2D3748;border-radius:10px;
+            padding:18px 12px;text-align:center;">
+  <div style="font-size:1.8rem;font-weight:800;letter-spacing:-0.5px;color:{color};
+              font-family:Inter,sans-serif;">{value}</div>
+  <div style="font-size:0.68rem;font-weight:600;color:#475569;text-transform:uppercase;
+              letter-spacing:0.6px;margin-top:3px;">{label}</div>
+</div>""", unsafe_allow_html=True)
+
+def section_label(text: str) -> None:
+    st.markdown(
+        f'<p style="font-size:0.7rem;font-weight:700;text-transform:uppercase;'
+        f'letter-spacing:1.2px;color:#475569;margin:0 0 8px 0;">{text}</p>',
+        unsafe_allow_html=True,
+    )
+
+def instr_step(num: str, heading: str, body: str) -> None:
+    st.markdown(f"""
+<div style="display:flex;gap:12px;align-items:flex-start;margin-bottom:18px;">
+  <div style="min-width:26px;height:26px;border-radius:6px;background:rgba(99,102,241,0.12);
+              border:1px solid rgba(99,102,241,0.25);color:#818CF8;font-size:0.72rem;
+              font-weight:700;display:flex;align-items:center;justify-content:center;
+              font-family:Inter,sans-serif;flex-shrink:0;">{num}</div>
+  <div>
+    <div style="font-size:0.82rem;font-weight:600;color:#CBD5E1;margin-bottom:3px;">{heading}</div>
+    <div style="font-size:0.75rem;color:#475569;line-height:1.55;">{body}</div>
+  </div>
+</div>""", unsafe_allow_html=True)
+
+def flag_row(icon: str, label: str, body: str) -> None:
+    st.markdown(f"""
+<div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:14px;">
+  <span style="font-size:1rem;flex-shrink:0;margin-top:1px;">{icon}</span>
+  <div>
+    <div style="font-size:0.8rem;font-weight:600;color:#CBD5E1;">{label}</div>
+    <div style="font-size:0.74rem;color:#475569;margin-top:2px;">{body}</div>
+  </div>
+</div>""", unsafe_allow_html=True)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# HEADER
 # ─────────────────────────────────────────────────────────────────────────────
 st.markdown("""
-<div class="app-root">
-<div class="topbar">
-  <div class="topbar-logo">
-    <span class="dot"></span>
+<div style="margin-bottom:32px;">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">
+    <div style="width:8px;height:8px;background:linear-gradient(135deg,#6366F1,#8B5CF6);
+                border-radius:50%;flex-shrink:0;"></div>
+    <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;
+                 letter-spacing:1.4px;color:#6366F1;font-family:Inter,sans-serif;">
+      Multi-Agent AI Code Review
+    </span>
+  </div>
+  <h1 style="font-size:2.4rem;font-weight:800;letter-spacing:-1px;color:#F1F5F9;
+             margin:0 0 10px 0;line-height:1.15;font-family:Inter,sans-serif;">
     PR Reviewer Agent Crew
-  </div>
-  <span class="topbar-badge">Powered by LangGraph + Gemini</span>
-</div>
-""", unsafe_allow_html=True)
-
-# ─────────────────────────────────────────────────────────────────────────────
-# HERO
-# ─────────────────────────────────────────────────────────────────────────────
-st.markdown("""
-<div class="hero">
-  <div class="hero-eyebrow">Multi-Agent AI Code Review</div>
-  <div class="hero-title">
-    Catch security bugs<br>
-    before they <span class="accent">hit production.</span>
-  </div>
-  <div class="hero-sub">
+  </h1>
+  <p style="font-size:1rem;color:#64748B;max-width:600px;line-height:1.65;margin:0;
+            font-family:Inter,sans-serif;">
     Paste any GitHub PR URL. Three AI agents fetch the diff, scan for
-    vulnerabilities, and generate a structured review — in seconds.
-  </div>
+    security vulnerabilities, and generate a structured code review — in seconds.
+  </p>
 </div>
 """, unsafe_allow_html=True)
 
+st.markdown("---")
+
 # ─────────────────────────────────────────────────────────────────────────────
-# CONTENT GRID — left main, right instructions
+# TWO-COLUMN LAYOUT  (main 62% | sidebar 38%)
 # ─────────────────────────────────────────────────────────────────────────────
-col_main, col_side = st.columns([2.2, 1], gap="small")
+main_col, side_col = st.columns([1.65, 1], gap="large")
 
-# ── RIGHT PANEL: Instructions ─────────────────────────────────────────────────
-with col_side:
-    st.markdown("""
-    <div class="side-panel">
-      <div class="instr-title">How to use</div>
+# ══════════════════════════════════════════════════════════════════════════════
+# SIDEBAR COLUMN — instructions + config
+# ══════════════════════════════════════════════════════════════════════════════
+with side_col:
 
-      <div class="instr-step">
-        <div class="instr-num">1</div>
-        <div class="instr-content">
-          <div class="instr-heading">Paste a GitHub PR URL</div>
-          <div class="instr-body">
-            Copy the URL of any public GitHub Pull Request.<br>
-            Format: <span class="instr-code">github.com/owner/repo/pull/N</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="instr-step">
-        <div class="instr-num">2</div>
-        <div class="instr-content">
-          <div class="instr-heading">Add API keys (optional)</div>
-          <div class="instr-body">
-            <b style="color:#D1D5DB">GitHub Token</b> — avoids rate limits on GitHub API.<br>
-            <b style="color:#D1D5DB">Gemini Key</b> — enables LLM deep-review mode.<br>
-            Without keys, heuristic analysis still works.
-          </div>
-        </div>
-      </div>
-
-      <div class="instr-step">
-        <div class="instr-num">3</div>
-        <div class="instr-content">
-          <div class="instr-heading">Click Run Review</div>
-          <div class="instr-body">
-            The 3-node LangGraph pipeline runs:<br>
-            <span class="instr-code">fetch_pr</span> →
-            <span class="instr-code">review_pr</span> →
-            <span class="instr-code">summarize_pr</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="instr-step">
-        <div class="instr-num">4</div>
-        <div class="instr-content">
-          <div class="instr-heading">Read the findings</div>
-          <div class="instr-body">
-            Each finding shows the severity, exact file &amp; line, a plain-English description, and an actionable fix suggestion.
-          </div>
-        </div>
-      </div>
-
-      <hr class="instr-divider">
-      <div class="instr-title">What gets flagged</div>
-
-      <div class="instr-step">
-        <div class="instr-num" style="background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.25);color:#FCD34D;">🔐</div>
-        <div class="instr-content">
-          <div class="instr-heading">Hardcoded Secrets</div>
-          <div class="instr-body">API keys, passwords, bearer tokens in plaintext</div>
-        </div>
-      </div>
-
-      <div class="instr-step">
-        <div class="instr-num" style="background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.25);color:#FCA5A5;">💉</div>
-        <div class="instr-content">
-          <div class="instr-heading">SQL Injection</div>
-          <div class="instr-body">String formatting / concatenation in SQL queries</div>
-        </div>
-      </div>
-
-      <div class="instr-step">
-        <div class="instr-num" style="background:rgba(59,130,246,0.12);border-color:rgba(59,130,246,0.25);color:#93C5FD;">🛡️</div>
-        <div class="instr-content">
-          <div class="instr-heading">Missing Input Validation</div>
-          <div class="instr-body">Unsanitized request params used directly</div>
-        </div>
-      </div>
-
-      <div class="instr-step">
-        <div class="instr-num" style="background:rgba(99,102,241,0.12);border-color:rgba(99,102,241,0.25);color:#A78BFA;">⚠️</div>
-        <div class="instr-content">
-          <div class="instr-heading">Missing Error Handling</div>
-          <div class="instr-body">Bare <span class="instr-code">except: pass</span> and empty catch blocks</div>
-        </div>
-      </div>
-
-      <hr class="instr-divider">
-      <div class="instr-title">Sample PRs to try</div>
-    """, unsafe_allow_html=True)
-
-    sample_prs = [
-        {
-            "name": "imageforgerydetector #1",
-            "url": "https://github.com/vjsyam/imageforgerydetector/pull/1",
-            "desc": "FastAPI serving layer — real SQLi + exception smells",
-            "tags": [("💉 SQLi", "sqli"), ("⚠️ Error", "err")],
-        },
-        {
-            "name": "psf/requests #6700",
-            "url": "https://github.com/psf/requests/pull/6700",
-            "desc": "Public open-source PR — typically clean",
-            "tags": [("✅ Clean", "clean")],
-        },
-    ]
-
-    for pr in sample_prs:
-        if st.button(f"▶ {pr['name']}", key=f"sample_{pr['name']}", use_container_width=True):
-            st.session_state.pr_url_input = pr["url"]
-            st.rerun()
-
-        tags_html = "".join(f'<span class="pr-tag {t[1]}">{t[0]}</span>' for t in pr["tags"])
-        st.markdown(f"""
-        <div style="font-size:0.72rem;color:#4B5563;margin:-8px 0 12px 0;padding:6px 2px;">
-          {pr['desc']}<br>
-          <span style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#374151;">{pr['url']}</span>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-# ── LEFT PANEL: Main interaction ───────────────────────────────────────────────
-with col_main:
-    st.markdown('<div class="main-panel">', unsafe_allow_html=True)
-
-    # ── Config expander (API keys) ─────────────────────────────────────────
-    with st.expander("⚙️  API Keys & Configuration", expanded=False):
-        c1, c2 = st.columns(2)
-        with c1:
-            github_token = st.text_input(
-                "GitHub Personal Access Token",
-                value=os.getenv("GITHUB_TOKEN", ""),
-                type="password",
-                placeholder="ghp_xxxx  (optional — increases rate limit)",
-                help="Get one at github.com/settings/tokens (public_repo scope)"
-            )
-        with c2:
-            gemini_key = st.text_input(
-                "Gemini API Key",
-                value=os.getenv("GEMINI_API_KEY", ""),
-                type="password",
-                placeholder="AIzaSy...  (optional — enables LLM mode)",
-                help="Get one at aistudio.google.com"
-            )
+    # ── Config ────────────────────────────────────────────────────────────────
+    with st.expander("⚙️  API Keys  (optional)", expanded=False):
+        github_token = st.text_input(
+            "GitHub Token",
+            value=os.getenv("GITHUB_TOKEN", ""),
+            type="password",
+            placeholder="ghp_xxxx — avoids rate limits",
+            key="gh_token",
+        )
+        gemini_key = st.text_input(
+            "Gemini API Key",
+            value=os.getenv("GEMINI_API_KEY", ""),
+            type="password",
+            placeholder="AIzaSy... — enables LLM deep review",
+            key="gem_key",
+        )
         if github_token:
             os.environ["GITHUB_TOKEN"] = github_token
         if gemini_key:
             os.environ["GEMINI_API_KEY"] = gemini_key
-
-        st.markdown("""
-        <div style="font-size:0.76rem;color:#4B5563;margin-top:8px;">
-          Without keys: heuristic regex scanner runs as fallback.<br>
-          With Gemini key: LLM semantic analysis mode activates automatically.
-        </div>
-        """, unsafe_allow_html=True)
-
-    # ── Pipeline architecture visual ───────────────────────────────────────
-    result = st.session_state.result
-    done = result is not None and not result.get("error")
-
-    st.markdown(f"""
-    <div class="pipeline-row">
-      <div class="pipeline-node">
-        <div class="pipeline-icon {'done' if done else ''}">📡</div>
-        <div class="pipeline-label">fetch_pr</div>
-      </div>
-      <div class="pipeline-arrow"></div>
-      <div class="pipeline-node">
-        <div class="pipeline-icon {'done' if done else ''}">🤖</div>
-        <div class="pipeline-label">review_pr</div>
-      </div>
-      <div class="pipeline-arrow"></div>
-      <div class="pipeline-node">
-        <div class="pipeline-icon {'done' if done else ''}">📝</div>
-        <div class="pipeline-label">summarize_pr</div>
-      </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # ── URL input + Run button ──────────────────────────────────────────────
-    st.markdown('<div class="section-label">GitHub Pull Request URL</div>', unsafe_allow_html=True)
-
-    input_col, btn_col = st.columns([5, 1])
-    with input_col:
-        pr_url = st.text_input(
-            "pr_url",
-            value=st.session_state.pr_url_input,
-            placeholder="https://github.com/owner/repo/pull/42",
-            label_visibility="collapsed",
-            key="pr_url_field"
-        )
-    with btn_col:
-        run_btn = st.button("Run Review →", use_container_width=True, key="run_btn")
-
-    st.markdown("""
-    <div style="font-size:0.72rem;color:#374151;margin-top:6px;">
-      Works with any public GitHub PR — authenticated or unauthenticated.
-    </div>
-    """, unsafe_allow_html=True)
+        st.caption("Without keys the heuristic scanner runs as fallback. With a Gemini key, LLM semantic analysis activates automatically.")
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # ── RUN PIPELINE ────────────────────────────────────────────────────────
+    # ── How to use ────────────────────────────────────────────────────────────
+    section_label("How to use")
+    instr_step("1", "Paste a GitHub PR URL",
+               "Copy the URL of any public GitHub Pull Request.<br>"
+               "<code style='font-family:JetBrains Mono,monospace;font-size:0.68rem;"
+               "background:#0A0C12;color:#818CF8;padding:1px 5px;border-radius:3px;"
+               "border:1px solid #2D3748;'>github.com/owner/repo/pull/N</code>")
+    instr_step("2", "Add API keys (optional)",
+               "<b style='color:#CBD5E1'>GitHub Token</b> — avoids rate limits.<br>"
+               "<b style='color:#CBD5E1'>Gemini Key</b> — enables LLM mode.<br>"
+               "Both are optional — heuristic analysis always runs.")
+    instr_step("3", "Click Run Review",
+               "The 3-node LangGraph pipeline runs:<br>"
+               "<code style='font-family:JetBrains Mono,monospace;font-size:0.68rem;"
+               "background:#0A0C12;color:#818CF8;padding:1px 5px;border-radius:3px;"
+               "border:1px solid #2D3748;'>fetch_pr → review_pr → summarize_pr</code>")
+    instr_step("4", "Read the findings",
+               "Each finding shows the severity, file &amp; line, plain-English description, and an actionable fix suggestion.")
+
+    st.markdown("---")
+
+    # ── What gets flagged ─────────────────────────────────────────────────────
+    section_label("What gets flagged")
+    flag_row("🔐", "Hardcoded Secrets",   "API keys, passwords, bearer tokens in plaintext")
+    flag_row("💉", "SQL Injection",       "String formatting / concatenation in SQL queries")
+    flag_row("🛡️", "Input Validation",   "Unsanitized request params used directly")
+    flag_row("⚠️", "Error Handling",     "Bare except: pass and empty catch blocks")
+
+    st.markdown("---")
+
+    # ── Sample PRs ────────────────────────────────────────────────────────────
+    section_label("Sample PRs to try")
+    st.caption("Click to pre-fill the URL input")
+
+    samples = [
+        ("imageforgerydetector #1 — SQLi + bare except",
+         "https://github.com/vjsyam/imageforgerydetector/pull/1"),
+        ("psf/requests #6700 — public open-source PR",
+         "https://github.com/psf/requests/pull/6700"),
+    ]
+    for label, url in samples:
+        if st.button(label, key=f"sample_{url}", use_container_width=True):
+            st.session_state.pr_url = url
+            st.rerun()
+
+# ══════════════════════════════════════════════════════════════════════════════
+# MAIN COLUMN — input + pipeline + results
+# ══════════════════════════════════════════════════════════════════════════════
+with main_col:
+
+    # ── Pipeline node visualiser ──────────────────────────────────────────────
+    result = st.session_state.result
+    done   = result is not None and not result.get("error")
+
+    def node_style(active: bool) -> str:
+        if active:
+            return ("background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.35);"
+                    "box-shadow:0 0 12px rgba(16,185,129,0.15);")
+        return "background:#161B26;border:1px solid #2D3748;"
+
+    n1, a1, n2, a2, n3 = st.columns([1, 0.3, 1, 0.3, 1])
+    with n1:
+        st.markdown(f"""
+<div style="{node_style(done)}border-radius:10px;padding:14px;text-align:center;">
+  <div style="font-size:1.3rem;margin-bottom:4px;">📡</div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;
+              font-weight:600;color:{'#6EE7B7' if done else '#64748B'};">fetch_pr</div>
+</div>""", unsafe_allow_html=True)
+    with a1:
+        st.markdown(f"""
+<div style="display:flex;align-items:center;justify-content:center;height:100%;">
+  <div style="height:1px;width:100%;background:{'rgba(16,185,129,0.4)' if done else '#2D3748'};margin-top:4px;"></div>
+</div>""", unsafe_allow_html=True)
+    with n2:
+        st.markdown(f"""
+<div style="{node_style(done)}border-radius:10px;padding:14px;text-align:center;">
+  <div style="font-size:1.3rem;margin-bottom:4px;">🤖</div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;
+              font-weight:600;color:{'#6EE7B7' if done else '#64748B'};">review_pr</div>
+</div>""", unsafe_allow_html=True)
+    with a2:
+        st.markdown(f"""
+<div style="display:flex;align-items:center;justify-content:center;height:100%;">
+  <div style="height:1px;width:100%;background:{'rgba(16,185,129,0.4)' if done else '#2D3748'};margin-top:4px;"></div>
+</div>""", unsafe_allow_html=True)
+    with n3:
+        st.markdown(f"""
+<div style="{node_style(done)}border-radius:10px;padding:14px;text-align:center;">
+  <div style="font-size:1.3rem;margin-bottom:4px;">📝</div>
+  <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;
+              font-weight:600;color:{'#6EE7B7' if done else '#64748B'};">summarize_pr</div>
+</div>""", unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── URL Input ─────────────────────────────────────────────────────────────
+    section_label("GitHub Pull Request URL")
+    url_col, btn_col = st.columns([5, 1])
+    with url_col:
+        pr_url = st.text_input(
+            "pr_url",
+            value=st.session_state.pr_url,
+            placeholder="https://github.com/owner/repo/pull/42",
+            label_visibility="collapsed",
+            key="pr_url_field",
+        )
+    with btn_col:
+        run_btn = st.button("Run Review →", type="primary",
+                            use_container_width=True, key="run_btn")
+
+    st.caption("Works with any public GitHub PR — authenticated or unauthenticated.")
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # ── EXECUTE PIPELINE ──────────────────────────────────────────────────────
     if run_btn:
         if not pr_url or "github.com" not in pr_url or "/pull/" not in pr_url:
             st.error("Please enter a valid GitHub PR URL — e.g. https://github.com/owner/repo/pull/42")
         else:
-            st.session_state.pr_url_input = pr_url
-            with st.status("Running pipeline...", expanded=True) as status:
-                st.write("**Step 1 / 3** — `fetch_pr`: Fetching PR diff from GitHub...")
+            st.session_state.pr_url = pr_url
+            with st.status("Running LangGraph pipeline...", expanded=True) as status:
+                st.write("**Step 1 / 3** — `fetch_pr`: Fetching PR diff & metadata from GitHub...")
 
                 from graph import pr_review_graph
                 from state import PRReviewState
@@ -747,128 +464,107 @@ with col_main:
                 else:
                     st.write("**Step 2 / 3** — `review_pr`: Scanning for vulnerabilities...")
                     st.write("**Step 3 / 3** — `summarize_pr`: Generating review report...")
-                    status.update(label="Review complete", state="complete", expanded=False)
+                    status.update(label="Review complete ✓", state="complete", expanded=False)
                     st.session_state.result = final_state
 
             st.rerun()
 
-    # ── RESULTS ─────────────────────────────────────────────────────────────
+    # ── RESULTS ───────────────────────────────────────────────────────────────
     if st.session_state.result:
-        res = st.session_state.result
+        res      = st.session_state.result
+        findings = res.get("findings", [])
+        n_high   = sum(1 for f in findings if f.get("severity") == "HIGH")
+        n_med    = sum(1 for f in findings if f.get("severity") == "MEDIUM")
+        n_low    = sum(1 for f in findings if f.get("severity") == "LOW")
+        n_files  = len(res.get("files", []))
 
         if res.get("error"):
-            st.markdown(f"""
-            <div class="status-banner action">
-              ❌&nbsp; <span>{res["error"]}</span>
-            </div>
-            """, unsafe_allow_html=True)
+            st.error(f"**Error:** {res['error']}")
         else:
-            findings = res.get("findings", [])
-            high = sum(1 for f in findings if f.get("severity") == "HIGH")
-            med  = sum(1 for f in findings if f.get("severity") == "MEDIUM")
-            low  = sum(1 for f in findings if f.get("severity") == "LOW")
-
             # Status banner
             if not findings:
-                st.markdown('<div class="status-banner approved">✅ &nbsp; No issues found — this PR looks clean!</div>', unsafe_allow_html=True)
-            elif high:
-                st.markdown(f'<div class="status-banner action">🔴 &nbsp; Action required — {high} critical issue{"s" if high>1 else ""} found. Do not merge without review.</div>', unsafe_allow_html=True)
+                st.success("✅  No issues found — this PR looks clean across all 4 audit categories.")
+            elif n_high:
+                st.error(f"🔴  **Action required** — {n_high} critical issue{'s' if n_high>1 else ''} found. Do not merge without review.")
             else:
-                st.markdown(f'<div class="status-banner comment">🟡 &nbsp; {len(findings)} minor issue{"s" if len(findings)>1 else ""} found — review suggested before merging.</div>', unsafe_allow_html=True)
+                st.warning(f"🟡  **{len(findings)} minor issue{'s' if len(findings)>1 else ''} found** — review suggested before merging.")
 
-            # Stats row
-            st.markdown(f"""
-            <div class="stats-row">
-              <div class="stat-box">
-                <div class="stat-number total">{len(findings)}</div>
-                <div class="stat-label">Total</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-number high">{high}</div>
-                <div class="stat-label">High</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-number medium">{med}</div>
-                <div class="stat-label">Medium</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-number low">{low}</div>
-                <div class="stat-label">Low</div>
-              </div>
-              <div class="stat-box">
-                <div class="stat-number" style="color:#9CA3AF;">{len(res.get("files",[]))}</div>
-                <div class="stat-label">Files Changed</div>
-              </div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
 
-            # Audit checklist
-            def chk(cat):
-                found = any(f.get("category") == cat for f in findings)
-                return f'<span class="checklist-fail">❌ Found</span>' if found else f'<span class="checklist-ok">✅ Clear</span>'
+            # Stats row — 5 native columns
+            s1, s2, s3, s4, s5 = st.columns(5)
+            with s1: stat_card(len(findings), "Total",         "#E2E8F0")
+            with s2: stat_card(n_high,        "High",          "#EF4444")
+            with s3: stat_card(n_med,         "Medium",        "#F59E0B")
+            with s4: stat_card(n_low,         "Low",           "#3B82F6")
+            with s5: stat_card(n_files,       "Files Changed", "#94A3B8")
 
-            st.markdown(f"""
-            <div class="checklist">
-              <div class="checklist-row"><span class="checklist-label">🔐 Hardcoded Secrets</span>{chk("hardcoded_secret")}</div>
-              <div class="checklist-row"><span class="checklist-label">💉 SQL Injection</span>{chk("sql_injection")}</div>
-              <div class="checklist-row"><span class="checklist-label">🛡️ Input Validation</span>{chk("missing_input_validation")}</div>
-              <div class="checklist-row"><span class="checklist-label">⚠️ Error Handling</span>{chk("missing_error_handling")}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
 
-            # Tabs: Findings | Summary | Diff
-            tab1, tab2, tab3 = st.tabs(["Findings", "Full Report", "Raw Diff"])
+            # Audit checklist — 2×2 native columns
+            section_label("Audit Checklist")
+
+            def chk_html(ok: bool) -> str:
+                return ('<span style="color:#6EE7B7;font-weight:700;font-size:0.8rem;">✅ Clear</span>'
+                        if ok else
+                        '<span style="color:#FCA5A5;font-weight:700;font-size:0.8rem;">❌ Found</span>')
+
+            cats = {f.get("category") for f in findings}
+
+            def checklist_box(icon: str, label: str, cat: str) -> None:
+                ok = cat not in cats
+                st.markdown(f"""
+<div style="background:#161B26;border:1px solid #2D3748;border-radius:8px;
+            padding:12px 16px;display:flex;align-items:center;
+            justify-content:space-between;">
+  <span style="font-size:0.84rem;font-weight:500;color:#CBD5E1;">
+    {icon}&nbsp; {label}
+  </span>
+  {chk_html(ok)}
+</div>""", unsafe_allow_html=True)
+
+            cl1, cl2 = st.columns(2)
+            with cl1:
+                checklist_box("🔐", "Hardcoded Secrets",   "hardcoded_secret")
+                st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+                checklist_box("🛡️", "Input Validation",    "missing_input_validation")
+            with cl2:
+                checklist_box("💉", "SQL Injection",        "sql_injection")
+                st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+                checklist_box("⚠️", "Error Handling",      "missing_error_handling")
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            # Result tabs
+            tab1, tab2, tab3 = st.tabs(["  Findings  ", "  Full Report  ", "  Raw Diff  "])
 
             with tab1:
+                st.markdown("<br>", unsafe_allow_html=True)
                 if findings:
-                    cat_icons = {
-                        "hardcoded_secret": "🔐 Hardcoded Secret",
-                        "sql_injection": "💉 SQL Injection",
-                        "missing_input_validation": "🛡️ Input Validation",
-                        "missing_error_handling": "⚠️ Error Handling",
-                    }
-                    cards_html = '<div class="findings-grid">'
                     for f in findings:
-                        sev = f.get("severity", "MEDIUM").lower()
-                        cat = cat_icons.get(f.get("category",""), f.get("category",""))
-                        cards_html += f"""
-                        <div class="finding-card {sev}">
-                          <div class="finding-header">
-                            <span class="finding-category">{cat}</span>
-                            <span class="severity-badge {sev}">{f.get("severity","MEDIUM")}</span>
-                          </div>
-                          <div class="finding-desc">{f.get("description","")}</div>
-                          <div class="finding-file">{f.get("file","unknown")} : {f.get("line","")}</div>
-                          <div class="finding-suggestion">{f.get("suggestion","")}</div>
-                        </div>"""
-                    cards_html += "</div>"
-                    st.markdown(cards_html, unsafe_allow_html=True)
+                        st.markdown(finding_card(f), unsafe_allow_html=True)
                 else:
                     st.markdown("""
-                    <div style="text-align:center;padding:48px;color:#4B5563;">
-                      <div style="font-size:2.5rem;margin-bottom:12px;">✅</div>
-                      <div style="font-size:0.95rem;font-weight:600;color:#6B7280;">No findings — this PR is clean.</div>
-                      <div style="font-size:0.8rem;color:#374151;margin-top:6px;">All 4 audit categories passed.</div>
-                    </div>
-                    """, unsafe_allow_html=True)
+<div style="text-align:center;padding:48px 24px;color:#475569;">
+  <div style="font-size:2.5rem;margin-bottom:12px;">✅</div>
+  <div style="font-size:0.95rem;font-weight:600;color:#64748B;">All checks passed.</div>
+  <div style="font-size:0.8rem;margin-top:6px;">No security issues detected in this PR.</div>
+</div>""", unsafe_allow_html=True)
 
             with tab2:
+                st.markdown("<br>", unsafe_allow_html=True)
                 st.markdown(res.get("summary", ""))
 
             with tab3:
+                st.markdown("<br>", unsafe_allow_html=True)
                 diff = res.get("diff", "")
                 if diff:
-                    display_diff = diff if len(diff) < 20000 else diff[:20000] + "\n\n# ... diff truncated (showing first 20 000 chars)"
-                    st.code(display_diff, language="diff")
+                    display = diff if len(diff) < 20000 else diff[:20000] + "\n\n# ... truncated"
+                    st.code(display, language="diff")
                 else:
                     st.info("No diff content available.")
 
-            # Reset button
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("← Review another PR", key="reset_btn"):
                 st.session_state.result = None
                 st.rerun()
-
-    st.markdown("</div>", unsafe_allow_html=True)
-
-st.markdown("</div>", unsafe_allow_html=True)  # close app-root
